@@ -7,5 +7,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <pcap.h>
+#include <netinet/in.h>
+//#include <sys/socket.h>
 
-int testPrint();
+int exit_nicely(char*, int);
+

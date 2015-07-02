@@ -3,6 +3,8 @@
 
 CC=gcc
 CFLAGS=
+LDFLAGS=
+LDLIBS=-lpcap
 
 DAEMON_PATH=src/daemon
 DB_PATH=src/database
@@ -15,7 +17,7 @@ DNS=$(DNS_PATH)/*c
 all: daemon 
 
 daemon:
-	$(CC) $(DAEMON) -o snarf
+	$(CC) $(DAEMON) $(LDLIBS) -o snarf
 
 clean:
 	rm -rf *.o snarf daemon
