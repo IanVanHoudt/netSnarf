@@ -14,8 +14,6 @@ int DEBUG = 1;
 
 int main(int argc, char *argv[])
 {
-    if (DEBUG) fprintf(stdout, "daemon: main(), line: %d\n", __LINE__);
-
     char *dev = NULL; /* name of the device to use */  
     char *net = NULL; /* dot notation of the network address */ 
     char *mask = NULL;/* dot notation of the network mask    */ 
@@ -25,22 +23,47 @@ int main(int argc, char *argv[])
     bpf_u_int32 maskp;/* subnet mask */ 
     struct in_addr addr; 
 
-    /* need to run as root or via sudo */
-    dev = pcap_lookupdev(errbuf);
+    if (argc == 2)
+        dev = argv[1];
+    else
+    {
+#ifdef WLAN
+        dev = "wlan0";
+#else
+        /* need to run as root or via sudo */
+        dev = pcap_lookupdev(errbuf);
+#endif
+    }
+
     if (dev == NULL) exit_nicely(errbuf, __LINE__);
-    fprintf(stdout, "Dev: %s\n", dev);
+
+    if (DEBUG) fprintf(stdout, "Dev: %s\n", dev);
 
     ret = pcap_lookupnet(dev, &netp, &maskp, errbuf);
-    if (!ret) exit_nicely(errbuf, __LINE__);
+    if (ret == -1) exit_nicely(errbuf, __LINE__);
 
     addr.s_addr = netp;
     net = inet_ntoa(addr);
     if (!net) exit_nicely("inet_ntoa", __LINE__);
-    fprintf(stdout, "Net: %s\n", net);
+    
+    if (DEBUG) fprintf(stdout, "Net: %s\n", net);
+
+    addr.s_addr = maskp;
+    mask = inet_ntoa(addr);
+    if (!mask) exit_nicely(__FILE__, __LINE__);
+
+    if (DEBUG) fprintf(stdout, "Mask: %s\n", mask);
 
     return 0;
 }
 
+
+void setup_device(char *dev, char *net, char *mask, struct in_addr *addr, 
+                  int ret, bpf_u_int32 *netp, bpf_u_int32 *maskp, char *errbuf)
+{
+
+
+}
 
 int exit_nicely(char *loc, int line)
 {

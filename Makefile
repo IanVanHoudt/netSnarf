@@ -2,7 +2,9 @@
 # Makefile for wireSnarf
 
 CC=gcc
-CFLAGS=
+# WLAN- Flag set for dev on wireless enabled laptop.
+#		Disable when building for wired device
+CFLAGS=-DWLAN
 LDFLAGS=
 LDLIBS=-lpcap
 
@@ -17,7 +19,7 @@ DNS=$(DNS_PATH)/*c
 all: daemon 
 
 daemon:
-	$(CC) $(DAEMON) $(LDLIBS) -o snarf
+	$(CC) $(DAEMON) $(LDLIBS) $(CFLAGS)  -o snarf
 
 clean:
 	rm -rf *.o snarf daemon

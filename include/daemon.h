@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pcap.h>
+#include <arpa/inet.h>
 #include <netinet/in.h>
 //#include <sys/socket.h>
 
