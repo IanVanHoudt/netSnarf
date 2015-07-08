@@ -11,6 +11,7 @@
 #include "../../include/daemon.h"
 
 int DEBUG = 1;
+int ETH_DEBUG = 1;
 
 int main(int argc, char *argv[])
 {
@@ -79,11 +80,53 @@ void device_info(char *dev, char *errbuf)
 }
 
 void handle_packet(u_char *args, const struct pcap_pkthdr *hdr,
-                 const u_char *pkt) 
+                   const u_char *pkt) 
 {
     static int count = 1;
-    fprintf(stdout, "%d, ", count);
+    //fprintf(stdout, "%d, ", count);
+
+    inspect_ethernet(args, hdr, pkt);
+
+    //inspect_ip_header(hdr, pkt);
     count++;
+}
+
+void inspect_ethernet(u_char *args, const struct pcap_pkthdr *hdr,
+                      const u_char *pkt)
+{
+    struct ether_header *eth;
+    eth = (struct ether_header *) pkt;
+    u_int16_t etherType;
+
+    if(ETH_DEBUG)
+    {
+        fprintf(stdout, "\t[Eth] Type: ");
+        switch (ntohs(eth->ether_type))
+        {
+            case (ETHERTYPE_IP):
+                fprintf(stdout, "IP");
+                break;
+            case (ETHERTYPE_ARP):
+                fprintf(stdout, "ARP");
+                break;
+            case (ETHERTYPE_REVARP):
+                fprintf(stdout, "REVARP");
+                break;
+            default:
+                fprintf(stdout, "Uknown Type");
+                exit_nicely(__FILE__, __LINE__);
+        }
+
+        fprintf(stdout, "\n\t[Eth] source: %s\n", ether_ntoa((const struct ether_addr *) eth->ether_shost));
+        fprintf(stdout, "\t[Eth] destination: %s\n\n", ether_ntoa((const struct ether_addr *) eth->ether_dhost));
+
+    }
+}
+
+void inspect_ip_header(const struct pcap_pkthdr *hdr, const u_char *pkt)
+{
+
+
 }
 
 int exit_nicely(char *loc, int line)
