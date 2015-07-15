@@ -1,0 +1,22 @@
+/* Copyright (c) Ian Van Houdt 2015 */
+
+/*
+*   SCHEMA.txt
+*
+*   Description of the snarf database schema
+*/
+
+	The snarf database module expects a MYSQL database by the name
+of "snarfdb".  This database should contain a single table "history",
+with columns following the description below.  It should be fairly
+easy to modify the snarf database name/schema as necessary, although
+the schema here will be considered default. 
+
+Tables:
+
+	HISTORY
+			ip				VARCHAR(12)		PRIMARY KEY
+			domain_name		VARCHAR(40)
+			date			DATE			PRIMARY KEY
+			time			TIME			PRIMARY KEY
+
