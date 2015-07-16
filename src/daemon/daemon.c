@@ -8,7 +8,8 @@
 * 		int main()
 */
 
-#include "../../include/daemon.h"
+#include "daemon.h"
+#include "database.h"
 
 /*
    Set of DEBUG IDs
@@ -21,6 +22,13 @@ int ETH_DEBUG = 1;
 int IP_DEBUG = 1;
 int TCP_DEBUG = 1;
 
+#define DATABASE "snarfdb"
+#define LOCALHOST "localhost"
+#define USER "root"
+#define PW "root"
+
+MYSQL *conn = NULL;
+
 int main(int argc, char *argv[])
 {
     int ret;
@@ -32,6 +40,16 @@ int main(int argc, char *argv[])
     const u_char *packet;
     struct pcap_pkthdr hdr;
     struct ether_header *eptr;
+
+#ifdef WITH_HISTORY
+    /*
+    char *server = "localhost";
+    char *database = "snarfdb";
+    char *user = "root";
+    char *pw = "root";
+    */
+    MYSQL *conn = connect_to_database(LOCALHOST, DATABASE, USER, PW);
+#endif
 
     /* Select device: wlan if developing, else lookup or supply via cli */
     if (argc == 2)
@@ -170,9 +188,26 @@ void inspect_ip_header(u_char *args, const struct pcap_pkthdr *hdr,
         fprintf(stdout, "\t\tDest Addr: %s\n", inet_ntoa(ip->ip_dst));
     }
 
-    
+    /* DNS lookup */
+    // TODO: Think about way to limit excessive DNS lookups, ie to cache
+    // results to avoid uncessary calls, such as maintaining array of ips 
+    // that have already been resolved.  This won't be super efficient, 
+    // but an array search will be much faster than send DNS requests
+    // over the network (unless it's getting hits from the DNS cache...)
+
+
+#ifdef WITH_HISTORY
+    /* Add to database */
+#ifdef DNS
+
+#else
+    // NULL for domain_name
+    add_to_database(inet_ntoa(ip->ip_dst), NULL);
+#endif
+#endif 
 
 #ifndef IP_ONLY
+    /* Inspect and handle TCP*/
     //At this juncture, only handle TCP. Easy to add others later
     switch(ip->ip_p)
     {

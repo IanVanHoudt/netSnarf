@@ -56,3 +56,29 @@ int main() {
 }
 #endif
 
+MYSQL *connect_to_database(char *server, char *database, char *user, 
+                           char *pw)
+{
+    MYSQL *conn;
+
+    server = "localhost";
+    user = "root";
+    pw = "root";
+    database = "snarfdb";
+
+    conn = mysql_init(NULL);
+
+    /* Connect to database */
+    if (!mysql_real_connect(conn, server, user, pw, database, 0, NULL, 0))
+    {
+        fprintf(stderr, "%s\n", mysql_error(conn));
+        exit(1);
+    }
+
+    return conn;
+}
+
+int add_to_database(char *ip, char *domain_name)
+{
+    fprintf(stdout, "adding %s to database\n", ip);
+}
