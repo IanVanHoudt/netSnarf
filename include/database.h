@@ -11,9 +11,11 @@
 #include <errno.h>
 #include <mysql.h>
 
+#define HISTORY_TABLE "history"
+
 MYSQL *connect_to_database(char *server, char *db_name, char *user, 
                            char *pw);
-int add_to_database(char *ip, char *domain_name);
+int add_to_database(MYSQL *conn, char *ip, char *domain_name);
 int remove_row_from_database();
 int remove_all_from_database();
 int dump_database(FILE*);

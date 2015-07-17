@@ -60,13 +60,6 @@ MYSQL *connect_to_database(char *server, char *database, char *user,
                            char *pw)
 {
     MYSQL *conn;
-    /*
-    server = "localhost";
-    user = "root";
-    pw = "root";
-    database = "snarfdb";
-    */
-
     conn = mysql_init(NULL);
 
     /* Connect to database */
@@ -79,7 +72,17 @@ MYSQL *connect_to_database(char *server, char *database, char *user,
     return conn;
 }
 
-int add_to_database(char *ip, char *domain_name)
+int add_to_database(MYSQL *conn, char *ip, char *domain_name)
 {
-    fprintf(stdout, "adding %s to database\n", ip);
+    // TODO: find a smarter way to calculate size of query buffer than
+    // hardcoding 128
+    char *query_buff = (char *)malloc(sizeof(char) * 128);
+
+    if (!domain_name)
+        domain_name = "NULL";
+
+    sprintf(query_buff, "INSERT INTO %s VALUES('%s', '%s', now());", 
+                         HISTORY_TABLE, ip, domain_name);
+
+    mysql_query(conn, query_buff);
 }

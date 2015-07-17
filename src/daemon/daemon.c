@@ -133,7 +133,7 @@ void handle_packet(u_char *args, const struct pcap_pkthdr *hdr,
         // over the network (unless it's getting hits from the DNS cache...)
 #else
         // Domain name is NULL if no DNS
-        add_to_database(ip_addr, NULL);
+        add_to_database(conn, ip_addr, NULL);
 #endif //DNS
 #endif //WITH_HISTORY
     }
@@ -275,6 +275,9 @@ int exit_nicely(char *loc, int line)
         fprintf(stderr, "\nWhoa, had issue (%s) at line %d! Exiting\n", loc, line);
     else
         fprintf(stderr, "\nWhoa, had issue at line %d! Exiting\n", line);
+
+    if (conn)
+        mysql_close(conn);
 
     exit(1);
 }
