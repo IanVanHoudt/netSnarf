@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <pcap.h>
 #include <arpa/inet.h>
@@ -21,8 +22,10 @@
 #define ETH_HDR_LEN     14
 #define IP_HL(ip)       (((ip)->ip_vhl) & 0x0f)
 #define IP_V(ip)        (((ip)->ip_vhl) >> 4)
+#define IP_ADDR_LEN     12
 
-struct my_ip {
+struct my_ip
+{
         u_char  ip_vhl;
         u_char  ip_tos;
         u_short ip_len;
@@ -41,7 +44,8 @@ struct my_ip {
 /* TCP header */
 typedef u_int tcp_seq;
  
-struct my_tcp {
+struct my_tcp
+{
         u_short th_sport;
         u_short th_dport;
         tcp_seq th_seq;
@@ -66,7 +70,8 @@ struct my_tcp {
 void device_info(char*, char*);
 void handle_packet(u_char*, const struct pcap_pkthdr*, const u_char*);
 u_int16_t inspect_ethernet_header(u_char*, const struct pcap_pkthdr*, const u_char*);
-void inspect_ip_header(u_char*, const struct pcap_pkthdr*, const u_char*);
+void inspect_ip_header(u_char*, const struct pcap_pkthdr*, const u_char*, 
+                       char**);
 void inspect_tcp_header(u_char*, const struct pcap_pkthdr*, const u_char*, struct my_ip*);
 
 int exit_nicely(char*, int);

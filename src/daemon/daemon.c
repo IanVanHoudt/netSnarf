@@ -27,6 +27,7 @@ int TCP_DEBUG = 1;
 #define USER "root"
 #define PW "root"
 
+char *SELF_IP = NULL;
 MYSQL *conn = NULL;
 
 int main(int argc, char *argv[])
@@ -42,13 +43,7 @@ int main(int argc, char *argv[])
     struct ether_header *eptr;
 
 #ifdef WITH_HISTORY
-    /*
-    char *server = "localhost";
-    char *database = "snarfdb";
-    char *user = "root";
-    char *pw = "root";
-    */
-    MYSQL *conn = connect_to_database(LOCALHOST, DATABASE, USER, PW);
+    conn = connect_to_database(LOCALHOST, DATABASE, USER, PW);
 #endif
 
     /* Select device: wlan if developing, else lookup or supply via cli */
@@ -93,6 +88,7 @@ void device_info(char *dev, char *errbuf)
     addr.s_addr = netp;
     net = inet_ntoa(addr);
     if (!net) exit_nicely("inet_ntoa", __LINE__);
+    SELF_IP = net;
     
     fprintf(stdout, "Net: %s\n", net);
 
@@ -106,7 +102,19 @@ void device_info(char *dev, char *errbuf)
 void handle_packet(u_char *args, const struct pcap_pkthdr *hdr,
                    const u_char *pkt) 
 {
+    /* 
+        Here is the core of snarf; the packet handler.  Whatever new
+        modules/features will likely be added here, implemented 
+        similarly to the ETHERTYPE_IP stmt below.  As packets come in,
+        deal with them according to whatever criteria you want, and make
+        the calls here as much as possible, rather than within other calls 
+        (such as calling a DB or DNS routine from within the 
+        inspect_ip_header() function).  This will help maintain modularity
+        and extensibility.
+    */
+
     static int count = 1;
+    char *ip_addr;
 
     if (DEBUG) fprintf(stdout, "\t====================\n");
     u_int16_t eth_type = inspect_ethernet_header(args, hdr, pkt);
@@ -114,7 +122,20 @@ void handle_packet(u_char *args, const struct pcap_pkthdr *hdr,
     if (eth_type == ETHERTYPE_IP && ETHERTYPE_IP != 0)
     {
         // parse ip and handle
-        inspect_ip_header(args, hdr, pkt);
+        inspect_ip_header(args, hdr, pkt, &ip_addr);
+#ifdef WITH_HISTORY
+#ifdef DNS
+        /* DNS lookup */
+        // TODO: Think about way to limit excessive DNS lookups, ie to cache
+        // results to avoid uncessary calls, like  maintaining array of ips 
+        // that have already been resolved.  This won't be super efficient, 
+        // but an array search will be much faster than send DNS requests
+        // over the network (unless it's getting hits from the DNS cache...)
+#else
+        // Domain name is NULL if no DNS
+        add_to_database(ip_addr, NULL);
+#endif //DNS
+#endif //WITH_HISTORY
     }
 
     count++;
@@ -156,7 +177,7 @@ u_int16_t inspect_ethernet_header(u_char *args, const struct pcap_pkthdr *hdr,
 }
 
 void inspect_ip_header(u_char *args, const struct pcap_pkthdr *hdr, 
-                       const u_char *pkt)
+                       const u_char *pkt, char **ip_addr)
 {
     struct my_ip *ip;
     u_int16_t version, ip_len;
@@ -188,23 +209,17 @@ void inspect_ip_header(u_char *args, const struct pcap_pkthdr *hdr,
         fprintf(stdout, "\t\tDest Addr: %s\n", inet_ntoa(ip->ip_dst));
     }
 
-    /* DNS lookup */
-    // TODO: Think about way to limit excessive DNS lookups, ie to cache
-    // results to avoid uncessary calls, such as maintaining array of ips 
-    // that have already been resolved.  This won't be super efficient, 
-    // but an array search will be much faster than send DNS requests
-    // over the network (unless it's getting hits from the DNS cache...)
-
-
 #ifdef WITH_HISTORY
     /* Add to database */
-#ifdef DNS
 
-#else
-    // NULL for domain_name
-    add_to_database(inet_ntoa(ip->ip_dst), NULL);
+    *ip_addr = (char*) malloc(sizeof(char) * IP_ADDR_LEN);
+    // src IP is not yours, so src will be recorded in DB
+    if (strcmp(inet_ntoa(ip->ip_src), SELF_IP) != 0)
+        strcpy(*ip_addr, inet_ntoa(ip->ip_src));
+    // src IP is yours, so dst will be recorded in DB
+    else
+        strcpy(*ip_addr, inet_ntoa(ip->ip_dst));
 #endif
-#endif 
 
 #ifndef IP_ONLY
     /* Inspect and handle TCP*/
