@@ -16,7 +16,7 @@ Tables:
 
 	HISTORY
 			ip				VARCHAR(16)		PRIMARY KEY
-			domain_name		VARCHAR(40)
+			domain_name		VARCHAR(60)
 			date			DATE			PRIMARY KEY
 			time			TIME			PRIMARY KEY
 
