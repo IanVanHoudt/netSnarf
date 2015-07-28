@@ -10,6 +10,7 @@
 
 #include "daemon.h"
 #include "database.h"
+#include "dns.h"
 
 /*
    Set of DEBUG IDs
@@ -104,7 +105,7 @@ void handle_packet(u_char *args, const struct pcap_pkthdr *hdr,
 {
     /* 
         Here is the core of snarf; the packet handler.  Whatever new
-        modules/features will likely be added here, implemented 
+        modules/features should probably be added here, and implemented 
         similarly to the ETHERTYPE_IP stmt below.  As packets come in,
         deal with them according to whatever criteria you want, and make
         the calls here as much as possible, rather than within other calls 
@@ -131,6 +132,11 @@ void handle_packet(u_char *args, const struct pcap_pkthdr *hdr,
         // that have already been resolved.  This won't be super efficient, 
         // but an array search will be much faster than send DNS requests
         // over the network (unless it's getting hits from the DNS cache...)
+        char *domain_name = NULL;
+        if (getHostnameByIP(ip_addr, &domain_name) != 0)
+            fprintf(stderr, "DNS Lookup yielded no hostname!\n");
+        add_to_database(conn, ip_addr, domain_name);
+        free(domain_name);
 #else
         // Domain name is NULL if no DNS
         add_to_database(conn, ip_addr, NULL);
@@ -211,6 +217,8 @@ void inspect_ip_header(u_char *args, const struct pcap_pkthdr *hdr,
 
 #ifdef WITH_HISTORY
     /* Add to database */
+
+    // TODO: strncpy
 
     *ip_addr = (char*) malloc(sizeof(char) * IP_ADDR_LEN);
     // src IP is not yours, so src will be recorded in DB

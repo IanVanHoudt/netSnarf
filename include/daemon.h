@@ -22,7 +22,7 @@
 #define ETH_HDR_LEN     14
 #define IP_HL(ip)       (((ip)->ip_vhl) & 0x0f)
 #define IP_V(ip)        (((ip)->ip_vhl) >> 4)
-#define IP_ADDR_LEN     12
+#define IP_ADDR_LEN     16
 
 struct my_ip
 {

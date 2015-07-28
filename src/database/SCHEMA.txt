@@ -15,7 +15,7 @@ the schema here will be considered default.
 Tables:
 
 	HISTORY
-			ip				VARCHAR(12)		PRIMARY KEY
+			ip				VARCHAR(16)		PRIMARY KEY
 			domain_name		VARCHAR(40)
 			date			DATE			PRIMARY KEY
 			time			TIME			PRIMARY KEY

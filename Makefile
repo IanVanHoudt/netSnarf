@@ -4,7 +4,7 @@
 CC=gcc
 # WLAN- Flag set for dev on wireless enabled laptop.
 #		Disable when building for wired device
-CFLAGS=-D WLAN -D IP_ONLY -D WITH_HISTORY
+CFLAGS=-D WLAN -D IP_ONLY -D WITH_HISTORY -D DNS
 LDFLAGS=
 LDLIBS=-lpcap -lmysqlclient
 
@@ -24,7 +24,7 @@ DNS=$(DNS_PATH)/*c
 all: daemon 
 
 daemon:
-	$(CC) $(DAEMON) $(DB) $(INC_LIB) $(LDLIBS) $(CFLAGS) -o snarfd
+	$(CC) $(DAEMON) $(DB) $(DNS) $(INC_LIB) $(LDLIBS) $(CFLAGS) -o snarfd
 
 clean:
 	rm -rf *.o snarfd daemon
