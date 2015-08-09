@@ -47,7 +47,7 @@ int getHostnameByIP(char *ip, char **host_name)
     inet_pton(AF_INET, ip, &addr.sin_addr);
  
     char node[NI_MAXHOST];
-    int res = getnameinfo((struct sockaddr*)&addr, sizeof(addr), node, sizeof(node), NULL, 0, 0);
+    int res = getnameinfo((struct sockaddr*)&addr, sizeof(addr), node, sizeof(node), NULL, 0, NI_NOFQDN);
     if (res)
     {
       printf("[DNS] %s\n", gai_strerror(res));
@@ -55,9 +55,8 @@ int getHostnameByIP(char *ip, char **host_name)
     }
     printf("%s\n", node);
 
-    //TODO: strncpy
     *host_name = (char*) malloc(sizeof(char) * HOST_NAME_LEN);
-    strcpy(*host_name, node);
+    strncpy(*host_name, node, strlen(node) + 1);
 
     return 0;
 }

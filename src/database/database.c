@@ -101,10 +101,51 @@ int add_to_database(MYSQL *conn, char *ip, char *domain_name)
     char *query_buff = (char *)malloc(sizeof(char) * 128);
 
     if (!domain_name)
+    {
         domain_name = "NULL";
+    }
 
     sprintf(query_buff, "INSERT INTO %s VALUES('%s', '%s', now());", 
                          HISTORY_TABLE, ip, domain_name);
+    mysql_query(conn, query_buff);
+    free(query_buff);
+
+    return 0;
+}
+
+int show_history(MYSQL *conn)
+{
+    char *query_buff = (char *)malloc(sizeof(char) *128);
+    sprintf(query_buff, "SELECT * FROM %s ORDER BY date;", HISTORY_TABLE);
 
     mysql_query(conn, query_buff);
+    MYSQL_RES *result = mysql_store_result(conn);
+
+    int total_rows = mysql_num_rows(result);
+    int total_columns = mysql_num_fields(result);
+    MYSQL_ROW row;
+
+    while ((row = mysql_fetch_row(result)))
+    {
+        int i = 0;
+        for (i; i < total_columns; i++)
+        {
+            fprintf(stdout, "%s\n", row[i]);
+        }
+
+        fprintf(stdout, "\n");
+    }
+
+    mysql_free_result(result);
+}
+
+int clear_history(MYSQL *conn)
+{
+    char *query_buff = (char *)malloc(sizeof(char) * 128);
+    sprintf(query_buff, "DELETE FROM %s;", HISTORY_TABLE);
+
+    mysql_query(conn, query_buff);
+    free(query_buff);
+
+    return 0;
 }

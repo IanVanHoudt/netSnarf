@@ -26,8 +26,6 @@
 *	daemon.c
 *		The daemon for the wireSnarf project. 
 *
-*	notable functions:
-* 		int main()
 */
 
 #include "daemon.h"
@@ -69,9 +67,69 @@ int main(int argc, char *argv[])
     conn = connect_to_database(LOCALHOST, DATABASE, USER, PW);
 #endif
 
+    char *ival = NULL;
+    int iflag = 0;
+    int c;
+    opterr = 0;
+
+    while ((c = getopt(argc, argv, "i:csh")) != -1)
+    {
+        switch (c)
+        {
+
+            /* select interface */
+            case 'i':
+                ival = optarg;
+                iflag = 1;
+                break;
+
+            /* clear history table */
+            case 'c':
+#ifdef WITH_HISTORY
+                clear_history(conn);
+                exit_nicely("History cleared");
+#else
+                exit_nicely("History database not in use.");
+#endif
+
+            /* show history */
+            case 's':
+#ifdef WITH_HISTORY
+                show_history(conn);
+                exit_nicely(NULL);
+#else
+                exit_nicely("History database not in use.");
+#endif
+  
+            /* print help */
+            case 'h':
+                break;
+            case '?':
+                if (optopt == 'i')
+                {
+                    fprintf(stderr,
+                            "Option -%c requires an argurment.\n", optopt);
+                }
+                else if (isprint(optopt))
+                {
+                    fprintf(stderr, "Unknown option '-%c'.\n", optopt);
+                }
+                else
+                {
+                    fprintf(stderr, 
+                            "Unknown option character '\\x%x'.\n", optopt);
+                }
+                return 1;
+
+            default:
+                fprintf(stdout, "Starting packet sniffer\n");
+
+        }
+    }
+
     /* Select device: wlan if developing, else lookup or supply via cli */
-    if (argc == 2)
-        dev = argv[1];
+    if (iflag)
+        dev = ival;
     else
     {
 #ifdef WLAN
@@ -81,14 +139,19 @@ int main(int argc, char *argv[])
 #endif
     }
 
-    if (dev == NULL) exit_nicely(errbuf, __LINE__);
+    if (dev == NULL) error_nicely(errbuf, __LINE__);
 
+    /* Get basic information on capture interface/device */
     device_info(dev, errbuf);
 
     dev_handle = pcap_open_live(dev, BUFSIZ, 0, -1, errbuf);
-    if (!dev_handle) exit_nicely(errbuf, __LINE__);
+    if (!dev_handle) error_nicely(errbuf, __LINE__);
 
+    /* primary packet handling engine */
     pcap_loop(dev_handle, num_pkts, handle_packet, NULL);
+
+    if (conn)
+        mysql_close(conn);
 
     return 0;
 }
@@ -106,18 +169,18 @@ void device_info(char *dev, char *errbuf)
     fprintf(stdout, "Dev: %s\n", dev);
 
     ret = pcap_lookupnet(dev, &netp, &maskp, errbuf);
-    if (ret == -1) exit_nicely(errbuf, __LINE__);
+    if (ret == -1) error_nicely(errbuf, __LINE__);
 
     addr.s_addr = netp;
     net = inet_ntoa(addr);
-    if (!net) exit_nicely("inet_ntoa", __LINE__);
+    if (!net) error_nicely("inet_ntoa", __LINE__);
     SELF_IP = net;
     
     fprintf(stdout, "Net: %s\n", net);
 
     addr.s_addr = maskp;
     mask = inet_ntoa(addr);
-    if (!mask) exit_nicely(__FILE__, __LINE__);
+    if (!mask) error_nicely(__FILE__, __LINE__);
 
     fprintf(stdout, "Mask: %s\n", mask);
 }
@@ -149,7 +212,7 @@ void handle_packet(u_char *args, const struct pcap_pkthdr *hdr,
 #ifdef WITH_HISTORY
 #ifdef DNS
         /* DNS lookup */
-        // TODO: Think about way to limit excessive DNS lookups, ie to cache
+        // NOTE: Think about way to limit excessive DNS lookups, ie to cache
         // results to avoid uncessary calls, like  maintaining array of ips 
         // that have already been resolved.  This won't be super efficient, 
         // but an array search will be much faster than send DNS requests
@@ -164,6 +227,8 @@ void handle_packet(u_char *args, const struct pcap_pkthdr *hdr,
         add_to_database(conn, ip_addr, NULL);
 #endif //DNS
 #endif //WITH_HISTORY
+
+        free(ip_addr);
     }
 
     count++;
@@ -240,15 +305,18 @@ void inspect_ip_header(u_char *args, const struct pcap_pkthdr *hdr,
 #ifdef WITH_HISTORY
     /* Add to database */
 
-    // TODO: strncpy
-
     *ip_addr = (char*) malloc(sizeof(char) * IP_ADDR_LEN);
+
     // src IP is not yours, so src will be recorded in DB
     if (strcmp(inet_ntoa(ip->ip_src), SELF_IP) != 0)
-        strcpy(*ip_addr, inet_ntoa(ip->ip_src));
+    {
+        strncpy(*ip_addr, inet_ntoa(ip->ip_src), strlen(inet_ntoa(ip->ip_src)) + 1);
+    }
     // src IP is yours, so dst will be recorded in DB
     else
-        strcpy(*ip_addr, inet_ntoa(ip->ip_dst));
+    {
+        strncpy(*ip_addr, inet_ntoa(ip->ip_dst), strlen(inet_ntoa(ip->ip_dst)) + 1);
+    }
 #endif
 
 #ifndef IP_ONLY
@@ -298,8 +366,19 @@ void inspect_tcp_header(u_char *args, const struct pcap_pkthdr *hdr,
 
  
 }
+int exit_nicely(char *message)
+{
+    if (*message && message)
+        fprintf(stdout, "Exiting: %s\n", message);
+    else
+        fprintf(stdout, "Exiting\n");
 
-int exit_nicely(char *loc, int line)
+    if (conn)
+        mysql_close(conn);
+
+    exit(0);
+}
+int error_nicely(char *loc, int line)
 {
     if (*loc && loc)
         fprintf(stderr, "\nWhoa, had issue (%s) at line %d! Exiting\n", loc, line);

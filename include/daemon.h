@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <errno.h>
 #include <pcap.h>
 #include <arpa/inet.h>
@@ -96,7 +97,8 @@ void inspect_ip_header(u_char*, const struct pcap_pkthdr*, const u_char*,
                        char**);
 void inspect_tcp_header(u_char*, const struct pcap_pkthdr*, const u_char*, struct my_ip*);
 
-int exit_nicely(char*, int);
+int exit_nicely(char*);
+int error_nicely(char*, int);
 
 /*
 
