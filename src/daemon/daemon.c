@@ -38,10 +38,18 @@
    1: Basic debug output
    2: Extensive debug output
 */
+
+#ifndef SIMPLE_DISPLAY
 int DEBUG = 1;
 int ETH_DEBUG = 1;
 int IP_DEBUG = 1;
 int TCP_DEBUG = 1;
+#else
+int DEBUG = 0;
+int ETH_DEBUG = 0;
+int IP_DEBUG = 0;
+int TCP_DEBUG = 0;
+#endif
 
 #define DATABASE "snarfdb"
 #define LOCALHOST "localhost"
@@ -230,7 +238,11 @@ void handle_packet(u_char *args, const struct pcap_pkthdr *hdr,
 
         free(ip_addr);
     }
-
+#ifdef SIMPLE_DISPLAY
+    fflush(stdout);
+    fprintf(stdout, "\r");
+    fprintf(stdout, "%d", count);
+#endif
     count++;
 }
 

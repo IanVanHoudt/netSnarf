@@ -53,7 +53,6 @@ int getHostnameByIP(char *ip, char **host_name)
       printf("[DNS] %s\n", gai_strerror(res));
       return -1;
     }
-    printf("%s\n", node);
 
     *host_name = (char*) malloc(sizeof(char) * HOST_NAME_LEN);
     strncpy(*host_name, node, strlen(node) + 1);

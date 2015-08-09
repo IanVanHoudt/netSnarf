@@ -4,7 +4,7 @@
 CC=gcc
 # WLAN- Flag set for dev on wireless enabled laptop.
 #		Disable when building for wired device
-CFLAGS=-D WLAN -D IP_ONLY -D WITH_HISTORY -D DNS
+CFLAGS=-D WLAN -D IP_ONLY -D WITH_HISTORY -D DNS -D SIMPLE_DISPLAY
 LDFLAGS=
 LDLIBS=-lpcap -lmysqlclient
 
