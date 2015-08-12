@@ -19,10 +19,10 @@ netSnarf is a C program designed to sniff packets travelling on the wire, built 
 netSnarf is built for and runs on Ubuntu Linux.  It should work with other Linux distros, although it has not been tested outside of Ubuntu.
 To access the network interfaces, you must be either be root, or have root privelages and use 'sudo' (the build example uses 'sudo').  
 
-To build and run netSnarf:
-$ cd <netSnarf-directory>
-$ make [verbose]
-$ sudo ./snarfd [OPTION]
+To build and run netSnarf:<br />
+$ cd <netSnarf-directory><br />
+$ make [verbose]<br />
+$ sudo ./snarfd [OPTION]<br />
 
 # Options:
     -c    clear history records (requires database module) 
@@ -34,6 +34,6 @@ $ sudo ./snarfd [OPTION]
     -s    show history records (requires database module)
 
 # License
-The MIT License (MIT)
-Copyright (c) 2015 Ian Van Houdt
-License details can be found in the 'netSnarf/' directory
+The MIT License (MIT)<br />
+Copyright (c) 2015 Ian Van Houdt<br />
+License details can be found in the 'netSnarf/' directory<br />
