@@ -12,5 +12,9 @@ Future extensions:
 
 # Dependencies
 libpcap
-mysqlclient
-mysqlserver
+mysqlclient (only for database module)
+mysqlserver (only for database module)
+
+# License
+The MIT License (MIT)
+Copyright (c) 2015 Ian Van Houdt
