@@ -111,7 +111,18 @@ int main(int argc, char *argv[])
   
             /* print help */
             case 'h':
-                break;
+                fprintf(stdout, "netSnarf Help:\n\tsnarf [OPTION]"
+                                "\nOPTIONS\n"
+                                "\t-c    "
+                                "clear history records (requires database module)\n"
+                                "\t-h    "
+                                "help, prints cli options\n"
+                                "\t-i <interface>    "
+                                "selects network interface to use for sniffing\n"
+                                "\t-s    "
+                                "show history records (requires database module)\n");
+                exit_nicely("");
+
             case '?':
                 if (optopt == 'i')
                 {
